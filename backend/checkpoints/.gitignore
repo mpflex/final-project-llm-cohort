@@ -1,0 +1,11 @@
+# Prevent large model weights from being committed.
+# The LoRA adapter lives here after downloading from SageMaker.
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.gguf
+# Keep the gitignore and any small config files
+!.gitignore
+!*.json
+!*.txt
