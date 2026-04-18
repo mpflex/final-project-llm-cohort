@@ -1,10 +1,130 @@
-# Action Plan
+# TacoLLM
 
-TacoLLM is a fine-tuned, constraint-aware taco recommendation system built as a final project for LLM Class 2026. The system accepts natural language dietary requests, extracts structured constraints, and returns a JSON taco recommendation rendered as a polished UI card. The core research question is whether LoRA fine-tuning improves the reliability of structured, constraint-aware generation compared to a base instruction model.
+**TacoLLM** is a fine-tuned, constraint-aware taco recommendation system built as a final project for LLM Class 2026.
 
-The project is deployed as a production-grade AWS stack: a Next.js frontend on Amplify, a FastAPI backend, and a SageMaker managed inference endpoint serving a LoRA-adapted `Llama-3.2-3B-Instruct` model. A 5,000-row synthetic dataset is used, split into training and held-out evaluation sets. The evaluation pipeline compares base vs. fine-tuned model on JSON validity, constraint satisfaction, field completeness, and contradiction rate.
+The system accepts natural language dietary requests ("high protein taco under 400 calories, no dairy"), extracts structured constraints, runs inference through a FastAPI backend, and renders side-by-side taco cards from the base model and a LoRA-adapted model in a Gradio frontend.
 
-The domain is tacos — chosen for personal and cultural reasons, and because the narrow-but-rich constraint space (calorie limits, dietary restrictions, macros, style) makes it an ideal test bed for structured generation reliability.
+The core research question: **does LoRA fine-tuning improve the reliability of structured, constraint-aware JSON generation compared with a base instruction model?**
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Gradio `gr.Blocks` (Python) |
+| Backend API | FastAPI + Uvicorn |
+| Base model | `meta-llama/Llama-3.2-3B-Instruct` |
+| Fine-tuned model | LoRA adapter trained on SageMaker (`ml.g5.2xlarge`) |
+| Training | HuggingFace PEFT + TRL via SageMaker Training Job |
+| Evaluation | Custom Python pipeline, 300 held-out prompts |
+| Package manager | `uv` |
+
+## How to Run
+
+### Prerequisites
+
+- Python 3.12
+- [`uv`](https://docs.astral.sh/uv/) installed
+- HuggingFace account with access to `meta-llama/Llama-3.2-3B-Instruct`
+- A `.env` file in the project root:
+  ```
+  HF_TOKEN=hf_...
+  ```
+
+### 1. Install dependencies
+
+```bash
+cd backend && uv sync && cd ..
+cd frontend && uv sync && cd ..
+```
+
+### 2. (Optional) Install the LoRA adapter
+
+After the SageMaker training job completes, download and extract the adapter:
+
+```bash
+aws s3 cp s3://marco-pineda-final-project/tacollm/output/tacollm-lora-v1-2026-04-18-17-59-57-270/output/model.tar.gz /tmp/tacollm-adapter.tar.gz
+mkdir -p backend/checkpoints/tacollm-lora-v1
+tar -xzf /tmp/tacollm-adapter.tar.gz -C backend/checkpoints/tacollm-lora-v1/
+```
+
+If the adapter is not present, all requests fall back to the base model automatically.
+
+### 3. Start the backend
+
+```bash
+cd backend
+HF_TOKEN=$(grep HF_TOKEN ../.env | cut -d= -f2) \
+HUGGING_FACE_HUB_TOKEN=$(grep HF_TOKEN ../.env | cut -d= -f2) \
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+The API is available at `http://localhost:8000`. Check `http://localhost:8000/docs` for the interactive Swagger UI.
+
+### 4. Start the frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+uv run python app.py
+```
+
+Open `http://127.0.0.1:7860` in your browser.
+
+### 5. Run the evaluation pipeline
+
+With the backend running:
+
+```bash
+cd backend
+uv run python -m evaluation.run_eval
+```
+
+Results are printed to stdout and returned from `POST /evaluate`.
+
+### Demo sequence
+
+1. "Give me a high protein taco under 400 calories."
+2. "Make it spicy and keep it dairy free."
+3. "Now make it vegan under 350 calories."
+
+Each turn: the system remembers prior constraints. Both taco cards update. The Debug accordion shows `parsed_constraints` accumulating across turns.
+
+## Project Structure
+
+```
+final/
+├── backend/
+│   ├── app/
+│   │   ├── main.py          # FastAPI routes
+│   │   ├── inference.py     # Model loading + generation pipeline
+│   │   ├── parser.py        # Constraint extractor
+│   │   ├── validator.py     # Output validator
+│   │   ├── memory.py        # Session memory
+│   │   └── prompts.py       # System + user prompt builders
+│   ├── training/
+│   │   ├── train_lora.py    # SageMaker training entry point
+│   │   ├── sagemaker_job.py # Job launcher
+│   │   └── generate_dataset.py
+│   ├── evaluation/
+│   │   ├── run_eval.py      # Full evaluation runner
+│   │   ├── metrics.py       # Scoring functions
+│   │   └── compare_models.py
+│   └── checkpoints/
+│       └── tacollm-lora-v1/ # LoRA adapter (download after training)
+├── frontend/
+│   ├── app.py               # Gradio Blocks UI
+│   └── client.py            # HTTP client for FastAPI
+├── data/
+│   ├── train.jsonl          # 4,700 training examples
+│   └── eval.json            # 300 held-out evaluation prompts
+├── docs/
+│   ├── api.md
+│   ├── architecture.md
+│   ├── deployment.md
+│   └── evaluation.md
+└── README.md
+```
 
 ## Table of Contents
 

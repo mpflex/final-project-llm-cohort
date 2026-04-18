@@ -1,3 +1,4 @@
+transformers>=4.41.0
 trl>=0.7.0
 peft>=0.13.0
 datasets>=2.16.0
