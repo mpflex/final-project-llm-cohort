@@ -45,6 +45,7 @@ import os
 from pathlib import Path
 
 import boto3
+import sagemaker
 from sagemaker.huggingface import HuggingFace
 
 logging.basicConfig(level=logging.INFO)
@@ -75,10 +76,14 @@ def launch_job(
     data_uri: str,
 ) -> str:
     """Configure and start the SageMaker training job. Returns the job name."""
+    boto_session = boto3.Session(region_name=region)
+    sm_session = sagemaker.Session(boto_session=boto_session)
+
     estimator = HuggingFace(
         entry_point="train_lora.py",
         source_dir=str(_SOURCE_DIR),
         role=role,
+        sagemaker_session=sm_session,
         instance_type=instance_type,
         instance_count=1,
         transformers_version="4.36",
