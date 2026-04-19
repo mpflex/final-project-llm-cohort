@@ -86,9 +86,9 @@ def launch_job(
         sagemaker_session=sm_session,
         instance_type=instance_type,
         instance_count=1,
-        transformers_version="4.36",
-        pytorch_version="2.1",
-        py_version="py310",
+        transformers_version="4.46",
+        pytorch_version="2.3",
+        py_version="py311",
         hyperparameters={
             "model-id": "meta-llama/Llama-3.2-3B-Instruct",
             "lora-r": 16,

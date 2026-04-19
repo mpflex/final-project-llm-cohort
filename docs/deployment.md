@@ -33,7 +33,7 @@ cd frontend && uv sync && cd ..
 
 ```bash
 aws s3 cp \
-  s3://marco-pineda-final-project/tacollm/output/tacollm-lora-v1-2026-04-18-17-59-57-270/output/model.tar.gz \
+  s3://marco-pineda-final-project/tacollm/output/tacollm-lora-v1-2026-04-19-00-15-49-687/output/model.tar.gz \
   /tmp/tacollm-adapter.tar.gz \
   --profile 165286508758_AdministratorAccess
 

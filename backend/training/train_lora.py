@@ -32,7 +32,8 @@ from datasets import Dataset
 from format_data import format_training_example
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl import SFTConfig, SFTTrainer
+from transformers import TrainingArguments
+from trl import SFTTrainer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ def train(args: argparse.Namespace) -> None:
 
     dataset = load_dataset(args.data_dir)
 
-    sft_config = SFTConfig(
+    training_args = TrainingArguments(
         output_dir=args.output_dir,
         num_train_epochs=args.num_epochs,
         per_device_train_batch_size=args.per_device_batch,
@@ -107,16 +108,16 @@ def train(args: argparse.Namespace) -> None:
         logging_steps=50,
         save_strategy="epoch",
         report_to="none",
-        max_seq_length=args.max_seq_length,
-        dataset_text_field="text",
-        packing=False,
     )
 
     trainer = SFTTrainer(
         model=model,
-        args=sft_config,
+        args=training_args,
         train_dataset=dataset,
         tokenizer=tokenizer,
+        max_seq_length=args.max_seq_length,
+        dataset_text_field="text",
+        packing=False,
     )
 
     logger.info("Starting training...")

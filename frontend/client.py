@@ -29,6 +29,6 @@ def generate_taco(
 ) -> Dict[str, Any]:
     """POST /generate-taco — raises on non-2xx or connection error."""
     payload = {"message": message, "session_id": session_id, "model": model}
-    resp = requests.post(f"{base_url}/generate-taco", json=payload, timeout=30)
+    resp = requests.post(f"{base_url}/generate-taco", json=payload, timeout=300)
     resp.raise_for_status()
     return resp.json()

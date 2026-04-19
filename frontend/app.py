@@ -48,7 +48,7 @@ def render_taco_card(taco: Optional[Dict[str, Any]], title: str = "") -> str:
         f'border-radius:12px;font-size:0.75rem;">{t}</span>'
         for t in tags
     )
-    ingredients_html = "".join(f"<li>{i}</li>" for i in ingredients)
+    ingredients_html = "".join(f'<li style="color:#374151;">{i}</li>' for i in ingredients)
 
     macro = (
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);'
@@ -57,20 +57,21 @@ def render_taco_card(taco: Optional[Dict[str, Any]], title: str = "") -> str:
     for value, label in [(calories, "cal"), (protein, "protein"), (carbs, "carbs"), (fat, "fat")]:
         suffix = "" if label == "cal" else "g"
         macro += (
-            f'<div style="text-align:center;background:#f9fafb;border-radius:6px;padding:6px;">'
-            f'<div style="font-size:1rem;font-weight:bold;">{value}{suffix}</div>'
-            f'<div style="font-size:0.7rem;color:#6b7280;">{label}</div></div>'
+            f'<div style="text-align:center;background:#f3f4f6;border-radius:6px;padding:6px;">'
+            f'<div style="font-size:1rem;font-weight:bold;color:#111827;">{value}{suffix}</div>'
+            f'<div style="font-size:0.7rem;color:#374151;">{label}</div></div>'
         )
     macro += "</div>"
 
     return (
-        '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#fff;">'
-        f'<h3 style="margin:0 0 8px 0;font-size:1.1rem;">{name}</h3>'
+        '<div style="border:1px solid #d1d5db;border-radius:8px;padding:16px;'
+        'background:#ffffff;color:#111827;">'
+        f'<h3 style="margin:0 0 8px 0;font-size:1.1rem;color:#111827;">{name}</h3>'
         f"{macro}"
         f'<div style="margin-bottom:8px;">{tag_pills}</div>'
-        f'<div style="margin-bottom:8px;font-size:0.85rem;">Spice: {spice_display}</div>'
-        f'<ul style="margin:0 0 8px 0;padding-left:20px;font-size:0.85rem;">{ingredients_html}</ul>'
-        f'<p style="margin:0;font-size:0.8rem;color:#6b7280;font-style:italic;">{reasoning}</p>'
+        f'<div style="margin-bottom:8px;font-size:0.85rem;color:#374151;">Spice: {spice_display}</div>'
+        f'<ul style="margin:0 0 8px 0;padding-left:20px;font-size:0.85rem;color:#374151;">{ingredients_html}</ul>'
+        f'<p style="margin:0;font-size:0.8rem;color:#4b5563;font-style:italic;">{reasoning}</p>'
         "</div>"
     )
 
@@ -146,8 +147,6 @@ def submit(
     if not message.strip():
         return history, "", "", "", session_id, ""
 
-    history = history + [[message, None]]
-
     with ThreadPoolExecutor(max_workers=2) as executor:
         base_future = executor.submit(_call_model, message, session_id, "base")
         lora_future = executor.submit(_call_model, message, session_id, "lora")
@@ -158,20 +157,23 @@ def submit(
     lora_html = render_taco_card(lora_taco)
     debug_md = format_debug_info(lora_meta)
 
-    history[-1][1] = "Done! Taco cards updated below."
+    history = history + [
+        {"role": "user", "content": message},
+        {"role": "assistant", "content": "Done! Taco cards updated below."},
+    ]
 
     return history, base_html, lora_html, debug_md, session_id, ""
 
 
 def build_app() -> "gr.Blocks":
     """Construct and return the Gradio Blocks application."""
-    with gr.Blocks(title="TacoLLM", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="TacoLLM 🌮", theme=gr.themes.Soft()) as demo:
         session_state = gr.State(value=lambda: str(uuid.uuid4()))
 
         gr.HTML(
             '<div style="display:flex;align-items:center;justify-content:space-between;'
             'padding:8px 0;">'
-            '<h1 style="margin:0;">TacoLLM</h1>'
+            '<h1 style="margin:0;">TacoLLM 🌮</h1>'
             f'<div>{get_health_badge()}</div>'
             "</div>"
             '<p style="color:#6b7280;margin:0 0 16px 0;">'

@@ -1,0 +1,40 @@
+{
+  "num_prompts": 20,
+  "base": {
+    "total": 20,
+    "json_validity_rate": 0.9,
+    "field_completeness_rate": 0.9,
+    "constraint_satisfaction_rate": 0.85,
+    "contradiction_rate": 0.05
+  },
+  "lora": {
+    "total": 20,
+    "json_validity_rate": 1.0,
+    "field_completeness_rate": 0.95,
+    "constraint_satisfaction_rate": 0.9,
+    "contradiction_rate": 0.1
+  },
+  "comparison": {
+    "json_validity_rate": {
+      "base": 0.9,
+      "lora": 1.0,
+      "delta": 0.1
+    },
+    "field_completeness_rate": {
+      "base": 0.9,
+      "lora": 0.95,
+      "delta": 0.05
+    },
+    "constraint_satisfaction_rate": {
+      "base": 0.85,
+      "lora": 0.9,
+      "delta": 0.05
+    },
+    "contradiction_rate": {
+      "base": 0.05,
+      "lora": 0.1,
+      "delta": 0.05
+    }
+  },
+  "summary_table": "Metric                                    Base       LoRA      Delta\n-------------------------------------------------------------------\njson_validity_rate                      0.9000     1.0000    +0.1000\nfield_completeness_rate                 0.9000     0.9500    +0.0500\nconstraint_satisfaction_rate            0.8500     0.9000    +0.0500\ncontradiction_rate                      0.0500     0.1000    +0.0500"
+}
